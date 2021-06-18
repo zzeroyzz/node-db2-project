@@ -2,9 +2,9 @@ const express = require("express")
 const Cars = require('./cars-model.js')
 const mw = require('../cars/cars-middleware.js')
 
-const router = express.Router
+const router = express.Router()
 
-router.get('/',mw.checkCarPayload, (req,res) =>{
+router.get('/', (req,res) =>{
     Cars.getAll()
     .then(cars =>{
         res.status(200).json(cars)
@@ -15,17 +15,17 @@ router.get('/',mw.checkCarPayload, (req,res) =>{
     })
 })
 
-router.get('/:id',mw.checkCarId,(req,res) =>{
-    res.status(200).json(req.cars)
+router.get("/:id", mw.checkCarId, (req, res) => {
+    res.json(req.car)
 })
 
-router.post('/',mw.checkVinNumberUnique,mw.checkVinNumberValid,mw.checkCarPayload,(req,res) =>{
-    Cars.create(req.body)
-    .then(cars =>{
-        res.status(201).json(cars)
-    })
-    .catch(err =>{
-        res.status(500).json({ message: 'Error adding the user'})
-    })
+router.post("/", mw.checkCarPayload, mw.checkVinNumberUnique, mw.checkVinNumberValid, (req, res, next) => {
+    const body = req.body
+    Cars.create(body)
+        .then(car => res.status(201).json(car))
+        .catch(next)
 })
-module.exports =router
+router.use((err, req, res, next) => { 
+    res.status(500).json({ message: err.message, stack: err.stack })
+  })
+module.exports = router
